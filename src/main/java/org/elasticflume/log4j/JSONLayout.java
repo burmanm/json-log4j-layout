@@ -15,6 +15,8 @@ public class JSONLayout extends Layout {
     private final JsonFactory jsonFactory;
     private String[] mdcKeys = new String[0];
 
+    private boolean createMdcField = true;
+    
     public JSONLayout() {
         jsonFactory = new JsonFactory();
     }
@@ -26,7 +28,13 @@ public class JSONLayout extends Layout {
             JsonGenerator g = createJsonGenerator(stringWriter);
             g.writeStartObject();
             writeBasicFields(event, g);
-            writeMDCValues(event, g);
+            if(createMdcField && mdcKeys.length > 0) {
+    			g.writeObjectFieldStart("MDC");
+                writeMDCValues(event, g);            	
+    			g.writeEndObject();            	            	
+            } else if(mdcKeys.length > 0){
+                writeMDCValues(event, g);            	
+            }
             writeThrowableEvents(event, g);
             writeNDCValues(event, g);
             g.writeEndObject();
@@ -70,20 +78,16 @@ public class JSONLayout extends Layout {
             g.writeStringField("throwable", throwableString);
         }
     }
-
+    
     private void writeMDCValues(LoggingEvent event, JsonGenerator g) throws IOException {
-        if (mdcKeys.length > 0) {
-            event.getMDCCopy();
+    	event.getMDCCopy();
 
-            g.writeObjectFieldStart("MDC");
-            for (String s : mdcKeys) {
-                Object mdc = event.getMDC(s);
-                if (mdc != null) {
-                    g.writeStringField(s, mdc.toString());
-                }
-            }
-            g.writeEndObject();
-        }
+    	for (String s : mdcKeys) {
+    		Object mdc = event.getMDC(s);
+    		if (mdc != null) {
+    			g.writeStringField(s, mdc.toString());
+    		}
+    	}            	
     }
 
     public String[] getMdcKeys() {
@@ -94,6 +98,15 @@ public class JSONLayout extends Layout {
         if (StringUtils.isNotBlank(mdcKeystoUse)){
             this.mdcKeys = mdcKeystoUse.split(",");
         }
+    }
+
+    /**
+     * Set false to handle MDC keys at the same level as LoggingEvent's internal keys
+     * 
+     * @param create true (default) or false
+     */
+    public void setCreateMdcField(String create) {
+    	this.createMdcField = Boolean.valueOf(create);
     }
 
     @Override
