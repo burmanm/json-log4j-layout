@@ -62,20 +62,32 @@ public class JSONLayoutTest {
 
     @Test
     public void validateMDCValueIsLoggedCorrectly() {
-
+    	LoggingEvent event = populateMDCValuesAndCheckCorrectness();
+        String logOutput = jsonLayout.format(event);
+        validateBasicLogOutput(logOutput, event);
+    	validateMDCValues(logOutput);
+    }
+    
+    private LoggingEvent populateMDCValuesAndCheckCorrectness() {
         Map<String, String> mdcMap = createMapAndPopulateMDC();
         Set<String> mdcKeySet = mdcMap.keySet();
 
         LoggingEvent event = createDefaultLoggingEvent();
         jsonLayout.setMdcKeysToUse(Joiner.on(",").join(mdcKeySet));
-        String logOutput = jsonLayout.format(event);
-
-        validateBasicLogOutput(logOutput, event);
         assertThat(jsonLayout.getMdcKeys().length, is(mdcKeySet.size()));
         for (String key : mdcKeySet) {
             assertThat(jsonLayout.getMdcKeys(), hasItemInArray(key));
-        }
-        validateMDCValues(logOutput);
+        }    	
+        return event;
+    }
+    
+    @Test
+    public void validateMDCValueIsLoggedCorrectlyTopLevel() {
+    	LoggingEvent event = populateMDCValuesAndCheckCorrectness();
+    	jsonLayout.setCreateMdcField(Boolean.toString(false));
+        String logOutput = jsonLayout.format(event);        
+        validateBasicLogOutput(logOutput, event);
+    	validateMDCValuesTopLevel(logOutput);
     }
 
     @Test
@@ -102,7 +114,6 @@ public class JSONLayoutTest {
         validateThreadName(logOutput, event);
         validateMessage(logOutput, event);
         validateNewLine(logOutput, event);
-
     }
 
     private void validateNewLine(String logOutput, LoggingEvent event) {
@@ -143,6 +154,12 @@ public class JSONLayoutTest {
         } else {
             fail("Expected the message to be set in the logging event");
         }
+    }
+    
+    private void validateMDCValuesTopLevel(String logOutput) {
+    	System.out.println(logOutput);
+    	String partialOutput = "\"UserId\":\"" + "U1" + "\",\"ProjectId\":\"" + "P1";
+        assertThat(logOutput, containsString(partialOutput));
     }
 
     private void validateMDCValues(String logOutput) {
