@@ -157,7 +157,6 @@ public class JSONLayoutTest {
     }
     
     private void validateMDCValuesTopLevel(String logOutput) {
-    	System.out.println(logOutput);
     	String partialOutput = "\"UserId\":\"" + "U1" + "\",\"ProjectId\":\"" + "P1";
         assertThat(logOutput, containsString(partialOutput));
     }
