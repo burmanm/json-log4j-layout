@@ -87,7 +87,7 @@ public class JSONLayoutTest {
     	jsonLayout.setCreateMdcField(Boolean.toString(false));
         String logOutput = jsonLayout.format(event);        
         validateBasicLogOutput(logOutput, event);
-    	validateMDCValuesTopLevel(logOutput);
+    	validateMDCValuesTopLevel(logOutput, event);
     }
 
     @Test
@@ -156,8 +156,8 @@ public class JSONLayoutTest {
         }
     }
     
-    private void validateMDCValuesTopLevel(String logOutput) {
-    	String partialOutput = "\"UserId\":\"" + "U1" + "\",\"ProjectId\":\"" + "P1";
+    private void validateMDCValuesTopLevel(String logOutput, LoggingEvent event) {
+    	String partialOutput = "\"" + event.getMessage() + "\",\"UserId\":\"" + "U1" + "\",\"ProjectId\":\"" + "P1";
         assertThat(logOutput, containsString(partialOutput));
     }
 
